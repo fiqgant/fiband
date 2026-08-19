@@ -4,8 +4,8 @@ Saves the raw bytes per day: needed to decode the sleep stages by comparing
 them with the official app's chart."""
 import asyncio
 
-from band import Band
-from config import BAND_ADDRESS
+from fiband.band import Band
+from fiband.config import BAND_ADDRESS
 
 
 async def main() -> None:

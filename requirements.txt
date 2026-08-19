@@ -1,2 +1,3 @@
 bleak
-pymysql
+flask
+requests

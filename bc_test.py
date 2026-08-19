@@ -14,8 +14,8 @@ For byte-by-byte comparison with the official app, enable the raw frame dump
 import argparse
 import asyncio
 
-from band import Band
-from config import BAND_ADDRESS, BAND_ACCOUNT
+from fiband.band import Band
+from fiband.config import BAND_ADDRESS, BAND_ACCOUNT
 
 
 async def main() -> None:

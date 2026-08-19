@@ -3,8 +3,7 @@
 FiBand - Unified collector.
 Connects to the band, downloads the history (heart rate + steps) and takes
 on-demand measurements (heart rate, SpO2, blood pressure, stress), saves
-everything to the `fiband` MySQL database.
-Prints a JSON summary on the last line (used by the index.php page).
+everything to the SQLite database.
 
 INCREMENTAL history: by default resumes from the last data point saved in
 the DB (MAX(ts)) and only downloads the missing days. Daily sync -> very
@@ -13,12 +12,15 @@ gap days. No marker to maintain: the source of truth is the data itself in
 the DB; upserts are idempotent (re-downloading an already-saved day creates
 no duplicates). Capped at MAX_DAYS beyond the device's buffer (~7 days).
 
-Usage:
-    python collect.py --mode quick                   # battery + HR + SpO2 + incremental history
-    python collect.py --mode full                     # everything, including blood pressure and stress
-    python collect.py --mode history                  # incremental history only (from the last data point)
-    python collect.py --mode history --days 7          # override: force 7 days back
-    python collect.py --mode history --from 2026-06-10T08:00   # start from a precise instant (ISO)
+Usage (CLI, standalone):
+    python -m fiband.collect --mode quick                   # battery + HR + SpO2 + incremental history
+    python -m fiband.collect --mode full                     # everything, including blood pressure and stress
+    python -m fiband.collect --mode history                  # incremental history only (from the last data point)
+    python -m fiband.collect --mode history --days 7          # override: force 7 days back
+    python -m fiband.collect --mode history --from 2026-06-10T08:00   # start from a precise instant (ISO)
+
+In the web app, `run()` is called in-process (no subprocess) by the
+`/action/sync` route in `fiband/actions.py`.
 """
 import argparse
 import asyncio
@@ -26,9 +28,9 @@ import json
 import sys
 from datetime import datetime, timezone
 
-from band import Band, RT, BPResult, LOCAL_TZ
-from config import BAND_ADDRESS
-from store import Store
+from .band import Band, RT, BPResult, LOCAL_TZ
+from .config import BAND_ADDRESS
+from .store import Store
 
 DEFAULT_DAYS = 7   # fallback when the DB is empty (first sync)
 MAX_DAYS = 14      # cap: beyond the device's buffer (~7 days), insisting is wasted time
@@ -177,7 +179,7 @@ def main() -> None:
     args = ap.parse_args()
 
     result = asyncio.run(run(args.address, args.mode, args.days, args.from_ts))
-    print(json.dumps(result))  # last line = JSON for the page
+    print(json.dumps(result))  # last line = JSON
 
 
 if __name__ == "__main__":

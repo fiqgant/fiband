@@ -1,4 +1,6 @@
 # --- Dati personali / sensibili (NON pubblicare) ---
+# SQLite database: contiene tutti i dati di salute reali
+fiband.db
 # Log con misure di salute reali (pressione, battito, stress)
 sync.log
 # Dump grezzo del canale bc (BC_DEBUG=1): account + dati salute in chiaro

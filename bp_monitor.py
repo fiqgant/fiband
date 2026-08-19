@@ -19,9 +19,9 @@ import asyncio
 import sys
 from datetime import datetime
 
-from band import Band, RT, BPResult
-from config import BAND_ADDRESS
-from store import Store
+from fiband.band import Band, RT, BPResult
+from fiband.config import BAND_ADDRESS
+from fiband.store import Store
 
 
 def log(msg: str) -> None:

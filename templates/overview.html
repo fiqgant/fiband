@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="overview" class="cards">
+  <div class="card"><div class="lbl">Heart Rate</div><div class="big">{{ card_val(latest, 'heart_rate') }}<span class="u"> bpm</span></div></div>
+  <div class="card"><div class="lbl">SpO2</div><div class="big">{{ (latestSpo2 | int) if latestSpo2 is not none else card_val(latest, 'spo2') }}<span class="u"> %</span></div></div>
+  <div class="card"><div class="lbl">Blood Pressure</div><div class="big">{{ card_val(latest, 'blood_pressure') }}<span class="u"> mmHg</span></div></div>
+  <div class="card"><div class="lbl">Stress</div><div class="big">{{ (latestStress | int) if latestStress is not none else card_val(latest, 'stress') }}</div></div>
+  <div class="card"><div class="lbl">HRV</div><div class="big">{{ (latestHrv | int) if latestHrv is not none else '—' }}<span class="u"> ms</span></div></div>
+  <div class="card"><div class="lbl">Sleep</div><div class="big">{% if sleepPeriodTotal %}{{ sleepPeriodTotal // 60 }}<span class="u">h </span>{{ sleepPeriodTotal % 60 }}<span class="u">m</span>{% else %}—{% endif %}</div></div>
+  <div class="card"><div class="lbl">Battery</div><div class="big">{{ card_val(latest, 'battery') }}<span class="u"> %</span></div></div>
+</section>
+
+<div class="sectionlbl">This period vs previous period</div>
+<section id="week" class="weekgrid">
+  <div class="card">
+    <div class="lbl">Resting HR</div>
+    <div class="big">{{ (weekly.hr.min | int) if weekly.hr.min is not none else '—' }}<span class="u"> bpm</span></div>
+    <div class="sub">avg {{ (weekly.hr.avg | round | int) if weekly.hr.avg is not none else '—' }} bpm</div>
+    {{ delta_badge(weekly.hr.delta_pct, true) }}
+  </div>
+  <div class="card">
+    <div class="lbl">Steps / Day</div>
+    <div class="big">{{ '{:,}'.format(weekSteps.daily_avg) }}</div>
+    <div class="sub">{{ '{:,}'.format(weekSteps.total) }} total this period</div>
+    {{ delta_badge(weekSteps.delta_pct) }}
+  </div>
+  <div class="card">
+    <div class="lbl">Best Day</div>
+    <div class="big">{{ '{:,}'.format(weekSteps.best_day_steps) if weekSteps.best_day_steps else '—' }}<span class="u"> steps</span></div>
+    <div class="sub">{{ weekSteps.best_day | daylabel if weekSteps.best_day else 'no data yet' }}</div>
+  </div>
+  <div class="card">
+    <div class="lbl">SpO2 Avg</div>
+    <div class="big">{{ (weekly.spo2.avg | round(1)) if weekly.spo2.avg is not none else '—' }}<span class="u"> %</span></div>
+    <div class="sub">min {{ (weekly.spo2.min | int) if weekly.spo2.min is not none else '—' }}%</div>
+    {{ delta_badge(weekly.spo2.delta_pct) }}
+  </div>
+  <div class="card">
+    <div class="lbl">Stress Avg</div>
+    <div class="big">{{ (weekly.stress.avg | round | int) if weekly.stress.avg is not none else '—' }}</div>
+    <div class="sub">peak {{ (weekly.stress.max | int) if weekly.stress.max is not none else '—' }}</div>
+    {{ delta_badge(weekly.stress.delta_pct, true) }}
+  </div>
+  <div class="card">
+    <div class="lbl">HRV Avg</div>
+    <div class="big">{{ (weekly.hrv.avg | round | int) if weekly.hrv.avg is not none else '—' }}<span class="u"> ms</span></div>
+    <div class="sub">range {{ (weekly.hrv.min | int) if weekly.hrv.min is not none else '—' }}&ndash;{{ (weekly.hrv.max | int) if weekly.hrv.max is not none else '—' }}</div>
+    {{ delta_badge(weekly.hrv.delta_pct) }}
+  </div>
+  <div class="card">
+    <div class="lbl">Sleep / Night</div>
+    <div class="big">{{ hhmm(weekSleep.avg_min | round | int) if weekSleep.avg_min is not none else '—' }}</div>
+    <div class="sub">avg this period</div>
+    {{ delta_badge(weekSleep.delta_pct) }}
+  </div>
+  <div class="card streak">
+    <div class="lbl">Active Streak</div>
+    <div class="big">{{ streak }}<span class="u"> day{{ '' if streak == 1 else 's' }}</span></div>
+    <div class="sub">consecutive days logged</div>
+  </div>
+</section>
+{% endblock %}

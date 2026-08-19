@@ -52,7 +52,7 @@ Same multi-packet structure as heart rate, but requested **per day index** `[cmd
 - `slot = (idx-1)*13 + position`; timestamp = midnight (UTC) + `slot*interval_min`.
 - sub `0xFF` = no data for that day.
 - Real example: `37 04 …2d…` → stress **45** at slot 43 (21:30); `39 04 …2c…` → HRV **44 ms** same slot.
-Implemented in `band.py` (`stress_history`, `hrv_history`) → tables `stress_samples` / `hrv_samples`.
+Implemented in `fiband/band.py` (`stress_history`, `hrv_history`) → tables `stress_samples` / `hrv_samples`.
 
 ## "Rich" bc channel — historical SpO2 and sleep stages (decoded)
 Besides the Nordic UART, the device exposes a **second channel ("bc")** on dedicated characteristics, with variable-length frames. This is where **historical SpO2** and **sleep stages** live (the app downloads them from here; UUID and format derived from the snoop log + byte-by-byte comparison with the app).
@@ -60,7 +60,7 @@ Besides the Nordic UART, the device exposes a **second channel ("bc")** on dedic
 - Characteristics: write `de5bf72a-d711-4e47-af26-65e3012a5dc7`, notify `de5bf729-...`.
 - **Frame**: `BC(0xBC) | type(1) | len(2 LE) | crc16-modbus(2 LE) | body`. Notifications can arrive **split** → they must be reassembled (see `_on_bc`).
 - **Mandatory handshake** before reading: login `0x4A` with the app's account (utf-16 string, with BOM `ff fe`) + init `0x30`. The account is the QWatch username (part before the `@`), configurable via `.env` (`BAND_ACCOUNT`).
-- **Debug**: `BC_DEBUG=1` dumps **all TX/RX frames** in hex on stderr (see `band.py` / `bc_test.py`). Essential for byte-by-byte comparison with the app.
+- **Debug**: `BC_DEBUG=1` dumps **all TX/RX frames** in hex on stderr (see `fiband/band.py` / `bc_test.py`). Essential for byte-by-byte comparison with the app.
 
 **Historical SpO2 (type `0x2A`)** — request `[day]` (0=today, 1=yesterday…).
 Response body: `[day] + 24 pairs (min,max)`, **one per HOUR** (00..23); pair `00 00` = hour without measurements. The app shows the hourly min-max range; we save the max. ⚠️ **These are NOT 15-min slots** (first-implementation mistake).
@@ -70,7 +70,7 @@ Verified example: hours 07→16 = `99,97,97,97,96,99,99,98,99,98` (identical to 
 Body: **7-byte header** (`01 00` + start etc.), then **(stage, duration_min)** pairs. Stages: `2=light, 3=deep, 4=REM, 5=awake`. ⚠️ The order is **(stage, duration)** — not (duration, stage) — and the header is **7 bytes**, not 6 (both first-implementation mistakes).
 Sleep start = minutes from midnight, `u16 LE` on `header[3:5]` (e.g. `…29 00…` → 41 → **00:41**). To be confirmed for falling asleep **before** midnight.
 Verified example (night 2026-06-14): light 352, deep 90, REM 63, awake 2 → total **8h27**, start **00:41** — identical to the app.
-Implemented in `band.py` (`spo2_history`, `sleep_detail`) → tables `spo2_samples` / `sleep_segments` + `sleep_sessions`.
+Implemented in `fiband/band.py` (`spo2_history`, `sleep_detail`) → tables `spo2_samples` / `sleep_segments` + `sleep_sessions`.
 
 ## Real capabilities (from the cmd 1 "set time" response)
 Bitmap declaring what the device can really do:
@@ -85,13 +85,12 @@ Bitmap declaring what the device can really do:
 1. ✅ **Sleep and historical SpO2 decoded** on the "rich" bc channel (see dedicated section), verified byte-by-byte against the app. Still to confirm: **sleep start** for falling asleep before midnight.
 2. **Decode the hourly BP history**: the app shows it (e.g. 17:00 = 129/88), cmd 20 doesn't respond → most likely another `type` of the bc channel. Capture with `BC_DEBUG=1` while the app syncs BP.
 3. **Automatic retries** on real-time measurements (heart rate/SpO2/BP/stress) to increase the lock rate.
-4. ✅ **Stress/HRV histories decoded and implemented** (`band.py`, 30 min slots). Still to refine: **real-time HRV** (cmd 105 type 10: value not in byte3).
+4. ✅ **Stress/HRV histories decoded and implemented** (`fiband/band.py`, 30 min slots). Still to refine: **real-time HRV** (cmd 105 type 10: value not in byte3).
 5. **SpO2 min/max**: the `spo2_samples` table has a single column (we save the hourly max). Consider `spo2_min`/`spo2_max` columns to not lose the range.
 6. Optional **automatic sync scheduling** (e.g. launchd) when the band is in range.
 7. DB migration to a remote instance (the PC stays the BLE bridge; the cloud has no Bluetooth).
 
 ## Supporting files in this docs/ folder
-- `SNOOP-LOG-GUIDE.md` — how to re-capture the HCI snoop log from Android.
+- `fiband-snoop-log-guide.md` — how to re-capture the HCI snoop log from Android.
 - `parse_snoop.py` — btsnoop parser: extracts the band's 16-byte frames.
-- `btsnoop_hci.log` — raw capture of QWatch Pro traffic (useful for decoding sleep).
-- `Hack the watch.md` / `.html` — article about the project.
+- `btsnoop_hci.log` — raw capture of QWatch Pro traffic (useful for decoding sleep). Not committed (gitignored: contains MACs, serials and health data); regenerate via `fiband-snoop-log-guide.md`.

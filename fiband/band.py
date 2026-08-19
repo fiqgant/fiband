@@ -25,9 +25,11 @@ from zoneinfo import ZoneInfo
 
 from bleak import BleakClient, BleakScanner
 
+from .config import FIBAND_TZ
+
 # The band keeps its clock in LOCAL time (not UTC): we anchor the history to
 # this timezone and let store.py convert to UTC when saving to the DB.
-LOCAL_TZ = ZoneInfo("Asia/Jakarta")
+LOCAL_TZ = ZoneInfo(FIBAND_TZ)
 
 RX = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 TX = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -435,7 +437,7 @@ class Band:
 
     async def _bc_login(self) -> bool:
         """Rich-channel handshake: login with the account + init. True if it looks ok."""
-        from config import BAND_ACCOUNT
+        from .config import BAND_ACCOUNT
         if not self._bc_ready:
             return False
         body = b"\x01\x01\x00" + BAND_ACCOUNT.encode("utf-16")  # 'utf-16' includes the ff fe BOM

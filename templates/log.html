@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="log">
+<details class="panel" open>
+  <summary><h2>Recent measurements</h2></summary>
+  <div class="tablewrap"><table>
+    <tr><th>When</th><th>Metric</th><th>Value</th></tr>
+    {% for r in recent %}
+      <tr><td>{{ tlocal(r.ts) }}</td><td>{{ r.metric }}</td>
+          <td>{{ recent_value(r) }} {{ r.unit }}</td></tr>
+    {% endfor %}
+    {% if not recent %}<tr><td colspan="3" style="color:var(--mut)">No measurements yet. Press "Quick measure".</td></tr>{% endif %}
+  </table></div>
+</details>
+
+<details class="panel">
+  <summary><h2>All saved data · {{ pl }}</h2></summary>
+  <div class="tablewrap"><table>
+    <tr><th>When</th><th>Type</th><th>Value</th></tr>
+    {% for r in allrows %}
+      <tr><td>{{ tlocal(r.ts) }}</td>
+          <td>{{ tipo_label(r.tipo) }}</td>
+          <td>{{ row_value(r) }}</td></tr>
+    {% endfor %}
+    {% if not allrows %}<tr><td colspan="3" style="color:var(--mut)">No data in the selected period.</td></tr>{% endif %}
+  </table></div>
+  <div class="hint">{{ allrows | length }} rows in the selected period (max 1000), most recent first. Change the period above to see more days.</div>
+</details>
+</section>
+{% endblock %}

@@ -11,8 +11,8 @@ WEAR the band, phone Bluetooth OFF.
 import argparse
 import asyncio
 
-from band import Band
-from config import BAND_ADDRESS
+from fiband.band import Band
+from fiband.config import BAND_ADDRESS
 
 
 async def main():

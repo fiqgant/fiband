@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="diary">
+<div class="panel">
+  <h2>Diary · daily notes <span class="sleeprange">{{ daysWithData | length }} days with data</span></h2>
+  <p class="hint">Add a note to days with collected data to give context to the <strong>AI Analysis</strong> above: what you did, activities, events, how you felt (e.g. &ldquo;10&nbsp;km run in the afternoon&rdquo;, &ldquo;gym 4-6pm&rdquo;, &ldquo;vacation at the beach&rdquo;). Notes from the last 6 months are included in the prompt sent to the model. Most recent day first.</p>
+  {% if daysWithData %}
+  <div class="notescroll">
+    {% for d, labels in daysWithData.items() %}
+      {% set note = dayNotes.get(d, '') %}
+      <div class="noteday" data-date="{{ d }}" data-saved="{{ note }}">
+        <div class="noteday-head">
+          <span class="noteday-date">{{ d | daylabel_full }}</span>
+          <span class="note-dot"{{ '' if note else ' style="display:none"' }}>● note</span>
+          <span class="noteday-meta">{{ labels | unique | join(' · ') }}</span>
+        </div>
+        <textarea rows="2" placeholder="Add a note for this day…" oninput="noteChanged(this)">{{ note }}</textarea>
+        <div class="notebar">
+          <button type="button" class="mini savebtn" onclick="saveNote('{{ d }}')" disabled>Save note</button>
+          <span class="notesaved"></span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="hint">No days with data yet. Sync with the band, then come back here to add notes to your days.</div>
+  {% endif %}
+</div>
+</section>
+{% endblock %}

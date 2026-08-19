@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="sleep">
+<div class="panel">
+  <h2>Sleep{% if sleepDate %} · {{ sleepDate | daylabel_full }}{% endif %}</h2>
+  {% if sleepSegs %}
+    {{ sleep_panel_body(sleepSegs, sleepStart, TZL) }}
+  {% else %}
+    <div class="hint">No sleep data yet. Wear the band at night, then press "History only".</div>
+  {% endif %}
+</div>
+
+{% if sleepDays %}
+<div class="panel">
+  <h2>Sleep · day-by-day check <span class="sleeprange">{{ sleepDays | length }} nights in period</span></h2>
+  <p class="hint">Visual check of the data passed to the AI analysis. A night longer than ~16h, or identical to the previous one, is almost certainly a band reading error (not real sleep).</p>
+  {% set ns = namespace(prev_segs=none) %}
+  {% for d, day in sleepDays.items() %}
+    {% set tot = sleep_totals(day.segs) %}
+    {% set dup_of_prev = (day.segs == ns.prev_segs) %}
+    {% set too_long = tot.total > 16 * 60 %}
+    {% set ns.prev_segs = day.segs %}
+    <div class="sleepday{{ ' bad' if (too_long or dup_of_prev) else '' }}">
+      <h3>{{ day.date | daylabel_full }}
+        <span class="hint" style="font-weight:400">{{ day.segs | length }} segments</span>
+        {% if too_long %}<span class="flag">⚠ {{ (tot.total / 60) | round(1) }}h · impossible</span>{% endif %}
+        {% if dup_of_prev %}<span class="flag">⧉ identical to the previous day</span>{% endif %}
+      </h3>
+      {{ sleep_panel_body(day.segs, day.start, TZL) }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+</section>
+{% endblock %}

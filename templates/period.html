@@ -1,0 +1,16 @@
+<section class="panel period-panel">
+  <h2>Period</h2>
+  <div class="btns">
+    {% for rk in ['today','24h','7d','30d'] %}
+      <a class="rbtn{{ ' on' if range == rk else '' }}" href="?page={{ page }}&range={{ rk }}">{{ RANGES[rk] }}</a>
+    {% endfor %}
+  </div>
+  <form method="get" class="customrange">
+    <input type="hidden" name="page" value="{{ page }}">
+    <input type="hidden" name="range" value="custom">
+    <span>Custom:</span>
+    <label>From <input type="date" name="from" value="{{ custom_from }}"></label>
+    <label>To <input type="date" name="to" value="{{ custom_to }}"></label>
+    <button{{ ' style="background:var(--acc)"' if range == 'custom' else '' }}>Apply</button>
+  </form>
+</section>

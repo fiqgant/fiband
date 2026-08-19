@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FiBand</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0c0e10">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<header class="masthead"><div class="wrap masthead-in">
+  <div class="brand">
+    <h1>FiBand</h1>
+  </div>
+  <button type="button" class="navtoggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="pageNav">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="pagenav" id="pageNav">
+    {% for k, lbl in [('overview','Overview'),('charts','Charts'),('sleep','Sleep'),('diary','Diary'),('log','Log'),('actions','Actions')] %}
+    <a href="?page={{ k }}"{% if page == k %} class="on"{% endif %}>{{ lbl }}</a>
+    {% endfor %}
+  </nav>
+</div></header>
+
+<div class="wrap">
+
+{% if err %}
+  <div class="err">Database error: {{ err }}</div>
+{% endif %}
+
+{% if page in ('overview', 'charts', 'sleep', 'log') %}
+  {% include "period.html" %}
+{% endif %}
+
+{% block content %}{% endblock %}
+
+</div>
+
+{% if page == 'charts' %}
+<script>
+window.FIBAND_DATA = {
+  longRange: {{ 'true' if longRange else 'false' }},
+  hrLabels:    {{ hr | map(attribute='ts') | map('tlabel', longRange) | list | tojson }},
+  hrVals:      {{ hr | map(attribute='bpm') | list | tojson }},
+  stepLabels:  {{ steps | map(attribute='ts') | map('tlabel', longRange) | list | tojson }},
+  stepVals:    {{ steps | map(attribute='steps') | list | tojson }},
+  stepDayLabels: {{ stepsByDay | map(attribute='d') | map('daylabel') | list | tojson }},
+  stepDayVals:   {{ stepsByDay | map(attribute='s') | list | tojson }},
+  bpLabels:    {{ series.blood_pressure | map(attribute='ts') | map('tlabel', longRange) | list | tojson }},
+  bpSys:       {{ series.blood_pressure | map(attribute='value') | map('int') | list | tojson }},
+  bpDia:       {{ series.blood_pressure | map(attribute='value2') | map('int') | list | tojson }},
+  spo2Labels:  {{ spo2hist | map(attribute='ts') | map('tlabel', longRange) | list | tojson }},
+  spo2Vals:    {{ spo2hist | map(attribute='spo2') | list | tojson }},
+  stressLabels:{{ stressHist | map(attribute='ts') | map('tlabel', longRange) | list | tojson }},
+  stressVals:  {{ stressHist | map(attribute='score') | list | tojson }},
+  hrvLabels:   {{ hrv | map(attribute='ts') | map('tlabel', longRange) | list | tojson }},
+  hrvVals:     {{ hrv | map(attribute='ms') | list | tojson }}
+};
+</script>
+{% endif %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
